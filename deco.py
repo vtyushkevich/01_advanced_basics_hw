@@ -72,6 +72,11 @@ def n_ary(func):
     return wrapper
 
 
+level = 0
+level_forward = True
+level_back = False
+
+
 def trace(str_trace):
     """Trace calls made to function decorated.
 
@@ -95,8 +100,20 @@ def trace(str_trace):
     def trace_decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            print(func.__name__, args, kwargs, str_trace)
-            return func(*args, **kwargs)
+            global level
+            global level_forward
+            global level_back
+            arrow_forward = "-->"
+            arrow_back = "<--"
+            prefix = f"{str_trace * level}{arrow_forward}"
+            strargs = ", ".join(repr(a) for a in args)
+            print("{} {}({})".format(prefix, func.__name__, strargs))
+            level += 1
+            result = func(*args, **kwargs)
+            level -= 1
+            prefix = f"{str_trace * level}{arrow_back}"
+            print("{} {}({}) == {}".format(prefix, func.__name__, strargs, result))
+            return result
         return wrapper
     return trace_decorator
 
@@ -116,7 +133,7 @@ def bar(a, b):
 
 
 @countcalls
-@trace("####")
+@trace("____")
 @memo
 def fib(n):
     """Some doc"""
@@ -127,17 +144,16 @@ def main():
     print(foo(4))
     print(foo(4, 3))
     print(foo(4, 3, 2))
-    # print(foo(4, 3))
     print("foo was called", foo.calls, "times")
-    #
-    # print(bar(4, 3))
-    # print(bar(4, 3, 2))
-    # print(bar(4, 3, 2, 1))
-    # print("bar was called", bar.calls, "times")
-    #
-    # print(fib.__doc__)
-    # fib(3)
-    # print(fib.calls, 'calls made')
+
+    print(bar(4, 3))
+    print(bar(4, 3, 2))
+    print(bar(4, 3, 2, 1))
+    print("bar was called", bar.calls, "times")
+
+    print(fib.__doc__)
+    print(fib(3))
+    print(fib.calls, 'calls made')
 
 
 if __name__ == '__main__':
