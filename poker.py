@@ -26,6 +26,7 @@
 # Вам наверняка пригодится itertools.
 # Можно свободно определять свои функции и т.п.
 # -----------------
+import itertools
 
 
 def hand_rank(hand):
@@ -54,7 +55,9 @@ def hand_rank(hand):
 def card_ranks(hand):
     """Возвращает список рангов (его числовой эквивалент),
     отсортированный от большего к меньшему"""
-    return
+    card_order = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A']
+    sorted_cards = sorted(hand, key=lambda c: (card_order.index(c[0]), c[1]))
+    return sorted_cards
 
 
 def flush(hand):
@@ -111,6 +114,8 @@ def test_best_wild_hand():
             == ['7C', '7D', '7H', '7S', 'JD'])
     print('OK')
 
+
 if __name__ == '__main__':
+    print(card_ranks("JD TC TH 7C 7D 7S 7H".split()))
     test_best_hand()
     test_best_wild_hand()
