@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import re
+from functools import reduce
+from itertools import filterfalse, combinations
+
 
 # -----------------
 # Реализуйте функцию best_hand, которая принимает на вход
@@ -26,14 +30,16 @@
 # Вам наверняка пригодится itertools.
 # Можно свободно определять свои функции и т.п.
 # -----------------
-import itertools
+card_order = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A']
+card_rank_value = {'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9,
+                   'T': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14}
 
 
 def hand_rank(hand):
     """Возвращает значение определяющее ранг 'руки'"""
     ranks = card_ranks(hand)
     if straight(ranks) and flush(hand):
-        return (8, max(ranks))
+        return (8, max(ranks, key=lambda x: card_rank_value[x]))
     elif kind(4, ranks):
         return (7, kind(4, ranks), kind(1, ranks))
     elif kind(3, ranks) and kind(2, ranks):
@@ -55,37 +61,86 @@ def hand_rank(hand):
 def card_ranks(hand):
     """Возвращает список рангов (его числовой эквивалент),
     отсортированный от большего к меньшему"""
-    card_order = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A']
-    sorted_cards = sorted(hand, key=lambda c: (card_order.index(c[0]), c[1]))
+    sorted_cards = sorted(hand, key=lambda c: (card_order.index(c[0]), c[1]), reverse=True)
+    print(sorted_cards)
+    sorted_cards = list(map(lambda x: x[:1], sorted_cards))
+    print(sorted_cards)
     return sorted_cards
 
 
 def flush(hand):
     """Возвращает True, если все карты одной масти"""
-    return
+    first_card_suit = hand[0][1]
+    for card in hand:
+        if first_card_suit != card[1]:
+            return False
+    return True
 
 
 def straight(ranks):
     """Возвращает True, если отсортированные ранги формируют последовательность 5ти,
     где у 5ти карт ранги идут по порядку (стрит)"""
-    return
+    card_order_reverse = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2']
+    str_card_order = "".join(card_order_reverse)
+    ranks = list(map(lambda x: x[:1], ranks))
+    str_ranks = "".join(ranks)
+    # print("str_ranks=", str_ranks)
+    for i in range(len(str_card_order) - 4):
+        if str_card_order[i:i+5] in str_ranks:
+            return True
+    return False
 
 
 def kind(n, ranks):
     """Возвращает первый ранг, который n раз встречается в данной руке.
     Возвращает None, если ничего не найдено"""
-    return
+    for rank in ranks:
+        calc_ranks = list(filter(lambda x: x == rank, ranks))
+        if len(calc_ranks) == n:
+            return rank
+    return None
 
 
 def two_pair(ranks):
-    """Если есть две пары, то возврщает два соответствующих ранга,
+    """Если есть две пары, то возвращает два соответствующих ранга,
     иначе возвращает None"""
-    return
+    str_ranks = "".join(ranks)
+    rank_list = []
+    for rank in str_ranks:
+        pair_list = []
+        if rank not in rank_list:
+            pair_list = list(filter(lambda x: x == rank, str_ranks))
+        if len(pair_list) == 2:
+            rank_list.append(rank)
+        if len(rank_list) == 2:
+            return rank_list
+    return None
 
 
 def best_hand(hand):
     """Из "руки" в 7 карт возвращает лучшую "руку" в 5 карт """
-    return
+    rank = [0]
+    current_hand = []
+    all_possible_hands = combinations(hand, 5)
+    for hand in all_possible_hands:
+        current_hand_rank = hand_rank(hand)
+        print("current_hand_rank=", current_hand_rank)
+        if current_hand_rank[0] > rank[0]:
+            rank = current_hand_rank
+            current_hand = hand
+        elif current_hand_rank[0] == 8 \
+                and current_hand_rank[0] == rank[0] \
+                and card_rank_value[current_hand_rank[1]] > card_rank_value[rank[1]]:
+            rank = current_hand_rank
+            current_hand = hand
+        elif current_hand_rank[0] == 6 \
+                and current_hand_rank[0] == rank[0] \
+                and card_rank_value[current_hand_rank[2]] > card_rank_value[rank[2]]:
+            rank = current_hand_rank
+            current_hand = hand
+    print("current_hand=", current_hand)
+    print("rank=", rank)
+    return current_hand
 
 
 def best_wild_hand(hand):
@@ -116,6 +171,15 @@ def test_best_wild_hand():
 
 
 if __name__ == '__main__':
-    print(card_ranks("JD TC TH 7C 7D 7S 7H".split()))
+    # print(card_ranks("6C 7C 8C 9C TC 5C JS".split()))
+    # print(card_ranks("6C 6S 6H 6D TC 5C JS".split()))
+    # print(straight(card_ranks("6C 7C 8C 9C TC 5C JS".split())))
+    # print(hand_rank("6C 7C 8C 9C TC 5C JS".split()))
+    # print(straight(card_ranks("9D 9C TH KC JD QS 7H".split())))
+    # print(kind(1, card_ranks("9D 9C TH KC JD QS 7H".split())))
+    # print(two_pair(card_ranks("9D 9C KH KC 8D 8S 8H".split())))
+    # print(flush("JD".split()))
+
+    # print(best_hand("6C 7C 8C 9C TC QC JC".split()))
     test_best_hand()
-    test_best_wild_hand()
+    # test_best_wild_hand()
